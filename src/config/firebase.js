@@ -1,8 +1,12 @@
 const admin = require('firebase-admin');
 const path = require('path');
 
-// Đường dẫn trỏ tới file key bạn tải từ Firebase Console
-const serviceAccount = require(path.join(__dirname, '../../serviceAccountKey.json'));
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} else {
+  serviceAccount = require(path.join(__dirname, '../../serviceAccountKey.json'));
+}
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)

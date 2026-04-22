@@ -15,15 +15,18 @@ class FirestoreRepository {
                 return [];
             }
 
-            // 2. Lấy project ID từ service account
-            const serviceAccountPath = path.join(__dirname, '../../serviceAccountKey.json');
-            const serviceAccount = require('../../serviceAccountKey.json');
+            let serviceAccount;
+            if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+                serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+            } else {
+                serviceAccount = require('../../serviceAccountKey.json');
+            }
             const projectId = serviceAccount.project_id;
 
             // 3. Lấy access token từ service account
             console.log("🔑 [FirestoreRepo] Đang xác thực với Google...");
             const auth = new GoogleAuth({
-                keyFile: serviceAccountPath,
+                credentials: serviceAccount,
                 scopes: ['https://www.googleapis.com/auth/datastore'],
             });
             const client = await auth.getClient();
