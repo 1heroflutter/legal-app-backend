@@ -2,6 +2,7 @@ const { GoogleAuth } = require('google-auth-library');
 const axios = require('axios');
 const path = require('path');
 const { generateEmbedding } = require('../services/aiService'); // Temporarily keep the link to aiService
+const { serviceAccount } = require('../config/firebase');
 
 class FirestoreRepository {
     async findSimilarJudgmentsREST(userQuery) {
@@ -15,12 +16,7 @@ class FirestoreRepository {
                 return [];
             }
 
-            let serviceAccount;
-            if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-                serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-            } else {
-                serviceAccount = require('../../serviceAccountKey.json');
-            }
+            // 2. Lấy project ID từ service account
             const projectId = serviceAccount.project_id;
 
             // 3. Lấy access token từ service account

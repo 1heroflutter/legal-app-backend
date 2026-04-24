@@ -1,4 +1,4 @@
-const { db, admin } = require('../config/firebase');
+const { db, admin, serviceAccount } = require('../config/firebase');
 const { generateEmbedding } = require('./aiService');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { GoogleAuth } = require('google-auth-library');
@@ -18,13 +18,12 @@ const findSimilarJudgmentsREST = async (userQuery) => {
         }
 
         // 2. Lấy project ID từ service account
-        const serviceAccount = require(path.join(__dirname, '../../serviceAccountKey.json'));
         const projectId = serviceAccount.project_id;
 
         // 3. Lấy access token từ service account
         console.log("🔑 Đang xác thực với Google...");
         const auth = new GoogleAuth({
-            keyFile: path.join(__dirname, '../../serviceAccountKey.json'),
+            credentials: serviceAccount,
             scopes: ['https://www.googleapis.com/auth/datastore'],
         });
         const client = await auth.getClient();
