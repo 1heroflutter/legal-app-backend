@@ -8,7 +8,7 @@ const parseJudgmentToJSON = async (rawText) => {
     if (!rawText || rawText.length < 50) return null;
 
     const apiKey = process.env.GEMINI_API_KEY;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const fallbackModels = ["gemini-2.5-flash", "gemini-flash-latest"];
 
     const sections = extractSections(rawText);
 
@@ -35,15 +35,19 @@ ${sections.thong_tin}
 `;
     } else {
         // Fallback: lấy phần cuối của bản án
-        const lastPart = sections.full.substring(Math.max(0, sections.full.length - 8000));
+        const lastPart = sections.full.substring(Math.max(0, sections.full.length - 20000));
         textToProcess = `
-=== PHẦN CUỐI BẢN ÁN (CÓ THỂ CHỨA QUYẾT ĐỊNH) ===
+=== PHẦN CUỐI BẢN ÁN (BAO GỒM PHẦN QUYẾT ĐỊNH QUAN TRỌNG NHẤT) ===
 ${lastPart}
 
 === THÔNG TIN CHUNG ===
 ${sections.thong_tin}
 `;
     }
+
+    // Bổ sung luồng "chắc chắn": Ép AI luôn đọc phần cuối để chốt tội danh và hình phạt
+    textToProcess += `\n\n=== TOÀN BỘ 15,000 KÝ TỰ CUỐI CÙNG (DÙNG ĐỂ CHỐT TỘI DANH, ĐIỀU LUẬT VÀ HÌNH PHẠT NẾU Ở TRÊN BỊ THIẾU) ===\n${sections.full.substring(Math.max(0, sections.full.length - 15000))}`;
+
 
     const prompt = `
 Bạn là chuyên gia pháp lý Việt Nam. Phân tích bản án và trả về JSON.
@@ -103,50 +107,67 @@ ${textToProcess}
 --- HÃY TRẢ VỀ JSON CHÍNH XÁC ---
 `;
 
-    try {
-        const promptData = {
-            contents: [
-                {
-                    parts: [
-                        {
-                            text: prompt
-                        }
-                    ]
-                }
-            ],
-            generationConfig: {
-                response_mime_type: "application/json",
-                temperature: 0.1
+    const promptData = {
+        contents: [
+            {
+                parts: [
+                    {
+                        text: prompt
+                    }
+                ]
             }
-        };
-
-        const response = await axios.post(url, promptData, { timeout: 30000 });
-        const text = response.data.candidates[0].content.parts[0].text;
-
-        // Parse và validate kết quả
-        const result = JSON.parse(text);
-
-        // Log kết quả để debug
-        console.log("📝 KẾT QUẢ AI:", {
-            toi_danh: result.toi_danh,
-            dieu_luat: result.phap_ly?.dieu_luat_day_du,
-            hinh_phat: result.phap_ly?.hinh_phat,
-            an_treo: result.phap_ly?.an_treo
-        });
-
-        return result;
-
-    } catch (error) {
-        const errorMsg = error.response?.data?.error?.message || error.message;
-        console.error("[AI ERROR]:", errorMsg);
-
-        // Thử lại với text ngắn hơn nếu lỗi 400
-        if (error.response?.status === 400 && rawText.length > 5000) {
-            console.log("🔄 Thử lại với text ngắn hơn...");
-            return parseJudgmentToJSON(rawText.substring(0, 4000));
+        ],
+        generationConfig: {
+            response_mime_type: "application/json",
+            temperature: 0.1
         }
+    };
 
-        throw new Error(`AI Analysis Error: ${errorMsg}`);
+    // Vòng lặp fallback model: tự chuyển model khi bị 429/503
+    for (let i = 0; i < fallbackModels.length; i++) {
+        const currentModel = fallbackModels[i];
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey}`;
+
+        try {
+            console.log(`🤖 Đang gọi model: ${currentModel}...`);
+            const response = await axios.post(url, promptData, { timeout: 60000 });
+            const text = response.data.candidates[0].content.parts[0].text;
+
+            // Parse và validate kết quả
+            const result = JSON.parse(text);
+
+            // Log kết quả để debug
+            console.log("📝 KẾT QUẢ AI:", {
+                toi_danh: result.toi_danh,
+                dieu_luat: result.phap_ly?.dieu_luat_day_du,
+                hinh_phat: result.phap_ly?.hinh_phat,
+                an_treo: result.phap_ly?.an_treo
+            });
+
+            return result;
+
+        } catch (error) {
+            const status = error.response?.status;
+            const errorMsg = error.response?.data?.error?.message || error.message;
+
+            // Nếu bị 429 (rate limit) hoặc 503 (quá tải) → thử model tiếp theo
+            if ((status === 429 || status === 503) && i < fallbackModels.length - 1) {
+                console.log(`⚠️ Model ${currentModel} bị ${status}. Chuyển sang ${fallbackModels[i + 1]}...`);
+                continue;
+            }
+
+            console.error(`❌ [AI ERROR] Model ${currentModel}:`, errorMsg);
+
+            // Thử lại với text ngắn hơn nếu lỗi 400
+            if (status === 400 && rawText.length > 5000) {
+                console.log("🔄 Thử lại với text ngắn hơn...");
+                return parseJudgmentToJSON(rawText.substring(0, 4000));
+            }
+
+            if (i === fallbackModels.length - 1) {
+                throw new Error(`AI Analysis Error: ${errorMsg}`);
+            }
+        }
     }
 };
 

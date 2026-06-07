@@ -1,6 +1,7 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 const express = require('express');
 const { chatWithAI } = require('./controllers/chatController');
+const { getRandomJudgments } = require('./controllers/judgmentController');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -25,6 +26,9 @@ app.use(express.json());
 
 // Route cho Chatbot
 app.post('/api/chat', chatWithAI);
+
+// Route cho Bản án
+app.get('/api/judgments/random', getRandomJudgments);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

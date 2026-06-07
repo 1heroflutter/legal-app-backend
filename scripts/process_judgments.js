@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { extractText } = require('../src/services/ocrService');
 const { parseJudgmentToJSON } = require('../src/services/aiService');
-const { db } = require('../src/config/firebase'); 
+const { db } = require('../src/config/firebase');
 const JUDGMENTS_DIR = path.join(__dirname, "../judgments_pdf");
 // =============================
 // CONFIG PRODUCTION
@@ -40,7 +40,7 @@ async function callAIWithRetry(text, retries = 5, delay = 20000) {
       return null;
     }
 
-    console.log(`⚠️ Retry sau ${delay/1000}s... (${retries} lần còn lại)`);
+    console.log(`⚠️ Retry sau ${delay / 1000}s... (${retries} lần còn lại)`);
 
     await sleep(delay);
 
@@ -66,9 +66,7 @@ async function processSingleFile(fileName) {
       return;
     }
 
-    const structuredData = await callAIWithRetry(
-      rawText.substring(0, 8000)
-    );
+    const structuredData = await callAIWithRetry(rawText);
 
     if (!structuredData) {
       console.log(`⚠️ AI không bóc tách được dữ liệu file: ${fileName}`);
@@ -111,7 +109,7 @@ async function main() {
 
       await processSingleFile(file);
 
-      console.log(`⏳ Đợi ${BASE_DELAY/1000}s tránh rate limit...\n`);
+      console.log(`⏳ Đợi ${BASE_DELAY / 1000}s tránh rate limit...\n`);
       await sleep(BASE_DELAY);
     }
 
