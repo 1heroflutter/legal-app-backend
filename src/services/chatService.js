@@ -265,11 +265,17 @@ const generateLegalConsultation = async (userQuery) => {
         console.log("🥞 [RAG Flow] Bước 7: Sắp xếp bằng Merge Sort ổn định...");
         const sortedJudgments = sortDocumentsByRelevance(scoredJudgments);
 
-        // Lấy Top 5 kết quả tốt nhất sau khi đã Rerank và Sắp xếp
-        const topJudgments = sortedJudgments.slice(0, 5);
-        console.log(` ✅ Lọc Top 5 bản án liên quan nhất. Bản án tốt nhất có điểm: ${topJudgments[0].relevanceScore || 0}`);
+        // Lấy Top 5 kết quả tốt nhất và LỌC bỏ các bản án không liên quan (điểm < 40)
+        const topJudgments = sortedJudgments.slice(0, 5).filter(j => j.relevanceScore >= 40);
+        
+        if (topJudgments.length === 0) {
+            console.log("⚠️ Tất cả bản án đều có độ tương đồng thấp (dưới ngưỡng 40). Chặn sinh câu trả lời rác.");
+            return "Dạ hiện tại trong hệ thống chưa lưu trữ bản án lệ nào sát với tình huống vi phạm này nên em chưa thể đưa ra tư vấn chính xác nhất ạ. Anh/chị thử hỏi về các lỗi khác xem sao nhé!";
+        }
 
-        // 8. Đóng gói Context từ Top 5 bản án chất lượng
+        console.log(` ✅ Lọc thành công ${topJudgments.length} bản án liên quan. Bản án tốt nhất có điểm: ${topJudgments[0].relevanceScore}`);
+
+        // 8. Đóng gói Context từ các bản án chất lượng
         console.log("📝 [RAG Flow] Bước 8: Đóng gói Context...");
         let context = topJudgments.map((j, index) => {
             return `Tiền lệ ${index + 1} (Điểm phù hợp: ${j.relevanceScore}/100):

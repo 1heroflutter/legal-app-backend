@@ -22,20 +22,20 @@ const parseJudgmentToJSON = async (rawText) => {
     let textToProcess = "";
 
     // Ưu tiên phần QUYẾT ĐỊNH
-    if (sections.quyet_dinh && sections.quyet_dinh.length > 100) {
+    if (sections.quyet_dinh && sections.quyet_dinh.length > 50) {
         textToProcess = `
 === PHẦN QUYẾT ĐỊNH (PHẦN QUAN TRỌNG NHẤT - NGUỒN DUY NHẤT CHO HÌNH PHẠT, TỘI DANH) ===
 ${sections.quyet_dinh}
 
 === PHẦN NHẬN ĐỊNH ===
-${sections.nhan_dinh.substring(0, 10000)}
+${sections.nhan_dinh.substring(0, 4000)}
 
 === THÔNG TIN CHUNG ===
 ${sections.thong_tin}
 `;
     } else {
-        // Fallback: lấy phần cuối của bản án
-        const lastPart = sections.full.substring(Math.max(0, sections.full.length - 20000));
+        // Fallback: lấy phần cuối của bản án nếu trích xuất thất bại
+        const lastPart = sections.full.substring(Math.max(0, sections.full.length - 8000));
         textToProcess = `
 === PHẦN CUỐI BẢN ÁN (BAO GỒM PHẦN QUYẾT ĐỊNH QUAN TRỌNG NHẤT) ===
 ${lastPart}
@@ -44,9 +44,6 @@ ${lastPart}
 ${sections.thong_tin}
 `;
     }
-
-    // Bổ sung luồng "chắc chắn": Ép AI luôn đọc phần cuối để chốt tội danh và hình phạt
-    textToProcess += `\n\n=== TOÀN BỘ 15,000 KÝ TỰ CUỐI CÙNG (DÙNG ĐỂ CHỐT TỘI DANH, ĐIỀU LUẬT VÀ HÌNH PHẠT NẾU Ở TRÊN BỊ THIẾU) ===\n${sections.full.substring(Math.max(0, sections.full.length - 15000))}`;
 
 
     const prompt = `
