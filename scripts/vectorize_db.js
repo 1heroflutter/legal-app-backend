@@ -20,7 +20,7 @@ async function vectorizeDB() {
         if (data.embedding_vector) continue;
 
         console.log(`Đang tạo Vector cho: ${data.so_ban_an}`);
-        const textForEmbedding = `Tội danh: ${data.toi_danh}. Hành vi: ${data.chi_tiet_vu_an.hanh_vi}. Pháp lý: ${data.phap_ly.dieu_luat_day_du}`;
+        const textForEmbedding = `Tội danh: ${data.toi_danh || ''}. Hành vi: ${data.chi_tiet_vu_an?.hanh_vi || ''}. Pháp lý: ${data.phap_ly?.dieu_luat_day_du || ''}`;
         
         const vector = await generateEmbedding(textForEmbedding);
         

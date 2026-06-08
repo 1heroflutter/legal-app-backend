@@ -8,7 +8,19 @@ const parseJudgmentToJSON = async (rawText) => {
     if (!rawText || rawText.length < 50) return null;
 
     const apiKey = process.env.GEMINI_API_KEY;
-    const fallbackModels = ["gemini-2.5-flash", "gemini-flash-latest"];
+    const fallbackModels = [
+        "gemini-2.5-flash", 
+        "gemini-2.5-pro",
+        "gemini-2.5-flash-lite",
+        "gemini-2.0-flash", 
+        "gemini-2.0-flash-lite",
+        "gemini-3.0-flash",
+        "gemini-3.1-flash-lite",
+        "gemini-3.1-pro",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+        "gemini-flash-latest"
+    ];
 
     const sections = extractSections(rawText);
 
