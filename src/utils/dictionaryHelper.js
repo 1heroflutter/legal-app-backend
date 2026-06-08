@@ -41,7 +41,10 @@ const VIETNAMESE_BASIC_WORDS = [
     // Một số từ phụ trợ tiếng Việt cực kỳ phổ biến khác
     "này", "kia", "đó", "ấy", "ấy", "nào", "mọi", "mỗi", "tất", "cả", "chỉ", "cũng", "còn", "quá", "rất", "lắm",
     "hết", "cực", "kỳ", "quá", "thật", "luôn", "ngay", "lập", "tức", "nhanh", "chậm", "sớm", "muộn", "đúng", "sai",
-    "rõ", "ràng", "mơ", "hồ", "khó", "dễ", "tốt", "xấu", "mới", "cũ", "cao", "thấp", "dài", "ngắn"
+    "rõ", "ràng", "mơ", "hồ", "khó", "dễ", "tốt", "xấu", "mới", "cũ", "cao", "thấp", "dài", "ngắn",
+    
+    // Từ lóng, chào hỏi tiếng Anh cơ bản, từ đệm
+    "hi", "hello", "alo", "ok", "okay", "vâng", "dạ", "ừ", "uh", "um", "bot", "ad", "admin", "hey", "ê", "chúc"
 ];
 
 // 2. Từ điển thực thể pháp lý (dành cho Aho-Corasick dán nhãn / trích xuất thực thể)
